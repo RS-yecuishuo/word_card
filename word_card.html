@@ -153,15 +153,26 @@
             border-radius: 4px;
             cursor: pointer;
             margin-right: 10px;
+            transition: all 0.3s ease;
         }
         .popup button:hover {
             background-color: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .popup button.cancel {
-            background-color: #f44336;
+            background-color: #9e9e9e;  /* 改为灰色 */
         }
         .popup button.cancel:hover {
-            background-color: #da190b;
+            background-color: #757575;
+        }
+
+        .popup button.reset {
+            background-color: #ff5252;  /* 改为较柔和的红色 */
+        }
+
+        .popup button.reset:hover {
+            background-color: #ff1744;
         }
 
         .button-group {
@@ -256,7 +267,7 @@
         }
 
         .explanation-content button:hover {
-            background-color: #45a049;
+            background-color: #559828;
         }
 
         .meaning-item {
@@ -269,19 +280,25 @@
             margin: 0;
         }
 
+        /* 修改增加意思按钮样式 */
         .add-meaning-btn {
             background: none;
             border: none;
             color: #4CAF50;
             cursor: pointer;
-            padding: 5px 0;
+            padding: 5px 5px;  /* 添加左右内边距 */
             margin-bottom: 10px;
             width: 100%;
             text-align: left;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
 
         .add-meaning-btn:hover {
-            text-decoration: underline;
+            color: #45a049;
+            padding-left: 10px;  /* 增加左内边距，产生向右移动的效果 */
+            background-color: rgba(76, 175, 80, 0.1);
+            border-radius: 4px;
         }
 
         .context-menu-item.add-meaning {
@@ -459,6 +476,48 @@
             margin-top: 10px;
             text-align: center;
         }
+
+        /* 添加颜色设置样式 */
+        .color-settings {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .color-settings h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .color-input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .color-input-group label {
+            width: 60px;
+            color: #666;
+        }
+
+        .color-input-group input {
+            flex: 1;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .color-settings button {
+            width: 100%;
+            margin-top: 10px;
+            background-color: #2196F3;
+        }
+
+        .color-settings button:hover {
+            background-color: #1976D2;
+        }
     </style>
 </head>
 <body>
@@ -492,6 +551,20 @@
             <button onclick="addWord()">添加</button>
             <button class="cancel" onclick="togglePopup()">取消</button>
             <button class="reset" onclick="resetToDefault()">删除所有</button>
+        </div>
+        
+        <!-- 添加背景颜色设置部分 -->
+        <div class="color-settings">
+            <h4>背景颜色设置</h4>
+            <div class="color-input-group">
+                <label>颜色1：</label>
+                <input type="text" id="color1" placeholder="[R,G,B]" value="[245,247,250]">
+            </div>
+            <div class="color-input-group">
+                <label>颜色2：</label>
+                <input type="text" id="color2" placeholder="[R,G,B]" value="[195,207,226]">
+            </div>
+            <button onclick="applyBackgroundColor()">应用背景色</button>
         </div>
     </div>
 
@@ -988,8 +1061,70 @@
             }
         }
 
-        // 页面加载完成后加载单词
-        document.addEventListener('DOMContentLoaded', loadWords);
+        // 添加背景颜色相关函数
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ] : null;
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
+
+        function parseRgbInput(input) {
+            try {
+                const values = input.match(/\d+/g).map(Number);
+                if (values.length === 3 && values.every(v => v >= 0 && v <= 255)) {
+                    return values;
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function applyBackgroundColor() {
+            const color1Input = document.getElementById('color1').value;
+            const color2Input = document.getElementById('color2').value;
+            
+            const rgb1 = parseRgbInput(color1Input);
+            const rgb2 = parseRgbInput(color2Input);
+            
+            if (!rgb1 || !rgb2) {
+                alert('请输入有效的RGB颜色值，格式为[R,G,B]');
+                return;
+            }
+            
+            const hex1 = rgbToHex(...rgb1);
+            const hex2 = rgbToHex(...rgb2);
+            
+            document.body.style.background = `linear-gradient(135deg, ${hex1} 0%, ${hex2} 100%)`;
+            
+            // 保存颜色设置到localStorage
+            localStorage.setItem('backgroundColor', JSON.stringify({
+                color1: rgb1,
+                color2: rgb2
+            }));
+        }
+
+        // 在页面加载时恢复保存的背景颜色
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedColors = localStorage.getItem('backgroundColor');
+            if (savedColors) {
+                const { color1, color2 } = JSON.parse(savedColors);
+                document.getElementById('color1').value = `[${color1.join(',')}]`;
+                document.getElementById('color2').value = `[${color2.join(',')}]`;
+                const hex1 = rgbToHex(...color1);
+                const hex2 = rgbToHex(...color2);
+                document.body.style.background = `linear-gradient(135deg, ${hex1} 0%, ${hex2} 100%)`;
+            }
+            loadWords();
+        });
     </script>
 </body>
 </html> 
