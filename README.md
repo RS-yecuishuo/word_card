@@ -5,5 +5,9 @@
  3.个性化  
  4.练习拼写  
  5.导入或导出单词书  
+<div align=center>
 ![image](https://github.com/user-attachments/assets/c5561d92-5b0e-45ca-8547-d4b6f95d4b1b)  
+</div>
+<div align=center>
 ![image](https://github.com/user-attachments/assets/18ea0d19-d4af-4b23-9bc3-887d25defc65)
+</div>
