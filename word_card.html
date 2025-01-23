@@ -679,6 +679,30 @@
         .export:hover, .import:hover {
             background-color: #1976D2 !important;
         }
+
+        .context-menu-item.edit {
+            color: #2196F3;
+        }
+        
+        .delete-meaning-btn {
+            background: none;
+            border: none;
+            color: #ff5252;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 5px;
+            margin-left: 5px;
+        }
+        
+        .delete-meaning-btn:hover {
+            color: #ff1744;
+        }
+        
+        .meaning-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -705,6 +729,7 @@
                     <option value="conj.">连词</option>
                     <option value="pron.">代词</option>
                 </select>
+                <button class="delete-meaning-btn" onclick="deleteMeaning(this)">×</button>
             </div>
         </div>
         <button class="add-meaning-btn" onclick="addMeaningInput()">+ 增加意思</button>
@@ -735,7 +760,7 @@
     <!-- 修改右键菜单，添加解释选项 -->
     <div class="context-menu" id="contextMenu">
         <div class="context-menu-item explain" onclick="explainWord()">ChatGPT解释</div>
-        <div class="context-menu-item add-meaning" onclick="addMeaningToWord()">增加意思</div>
+        <div class="context-menu-item edit" onclick="editWord()">编辑意思</div>
         <div class="context-menu-item delete" onclick="deleteWord()">删除单词</div>
     </div>
 
@@ -1005,9 +1030,6 @@
                 return;
             }
 
-            // 获取已有的意思
-            const existingMeanings = defaultWords.filter(word => word.english === english);
-
             meaningItems.forEach(item => {
                 const chinese = item.querySelector('.chinese-input').value.trim();
                 const type = item.querySelector('.type-select').value;
@@ -1025,8 +1047,8 @@
             // 删除已存在的相同单词
             defaultWords = defaultWords.filter(word => word.english !== english);
             
-            // 添加所有意思（包括原有的和新的）
-            defaultWords.push(...existingMeanings, ...meanings);
+            // 添加新的意思
+            defaultWords.push(...meanings);
 
             // 保存到localStorage
             localStorage.setItem('defaultWords', JSON.stringify(defaultWords));
@@ -1066,6 +1088,7 @@
                             <option value="conj.">连词</option>
                             <option value="pron.">代词</option>
                         </select>
+                        <button class="delete-meaning-btn" onclick="deleteMeaning(this)">×</button>
                     </div>
                 `;
                 const firstInput = container.querySelector('.english-input');
@@ -1140,13 +1163,13 @@
             }
         });
 
-        // 添加意思输入框
+        // 修改添加意思输入框函数
         function addMeaningInput() {
             const container = document.getElementById('meanings-container');
             const meaningItem = document.createElement('div');
             meaningItem.className = 'meaning-item';
             meaningItem.innerHTML = `
-                <input type="text" class="english-input" placeholder="英文单词">
+                <input type="text" class="english-input" placeholder="英文单词" ${container.querySelector('.english-input').value ? `value="${container.querySelector('.english-input').value}" disabled` : ''}>
                 <input type="text" class="chinese-input" placeholder="中文含义">
                 <select class="type-select">
                     <option value="n.">名词</option>
@@ -1157,12 +1180,13 @@
                     <option value="conj.">连词</option>
                     <option value="pron.">代词</option>
                 </select>
+                <button class="delete-meaning-btn" onclick="deleteMeaning(this)">×</button>
             `;
             container.appendChild(meaningItem);
         }
 
-        // 为已有单词添加新意思
-        function addMeaningToWord() {
+        // 删除原有的 addMeaningToWord 函数，添加新的 editWord 函数
+        function editWord() {
             if (!selectedWord) return;
 
             const popup = document.getElementById('popup');
@@ -1171,26 +1195,42 @@
             // 清空现有输入框
             container.innerHTML = '';
             
-            // 添加一个新的输入框
-            const meaningItem = document.createElement('div');
-            meaningItem.className = 'meaning-item';
-            meaningItem.innerHTML = `
-                <input type="text" class="english-input" placeholder="英文单词" value="${selectedWord.english}" disabled>
-                <input type="text" class="chinese-input" placeholder="中文含义">
-                <select class="type-select">
-                    <option value="n.">名词</option>
-                    <option value="v.">动词</option>
-                    <option value="adj.">形容词</option>
-                    <option value="adv.">副词</option>
-                    <option value="prep.">介词</option>
-                    <option value="conj.">连词</option>
-                    <option value="pron.">代词</option>
-                </select>
-            `;
-            container.appendChild(meaningItem);
+            // 获取当前单词的所有意思
+            const wordMeanings = defaultWords.filter(word => word.english === selectedWord.english);
+            
+            // 为每个意思创建输入框
+            wordMeanings.forEach(meaning => {
+                const meaningItem = document.createElement('div');
+                meaningItem.className = 'meaning-item';
+                meaningItem.innerHTML = `
+                    <input type="text" class="english-input" placeholder="英文单词" value="${meaning.english}" disabled>
+                    <input type="text" class="chinese-input" placeholder="中文含义" value="${meaning.chinese}">
+                    <select class="type-select">
+                        <option value="n." ${meaning.type === 'n.' ? 'selected' : ''}>名词</option>
+                        <option value="v." ${meaning.type === 'v.' ? 'selected' : ''}>动词</option>
+                        <option value="adj." ${meaning.type === 'adj.' ? 'selected' : ''}>形容词</option>
+                        <option value="adv." ${meaning.type === 'adv.' ? 'selected' : ''}>副词</option>
+                        <option value="prep." ${meaning.type === 'prep.' ? 'selected' : ''}>介词</option>
+                        <option value="conj." ${meaning.type === 'conj.' ? 'selected' : ''}>连词</option>
+                        <option value="pron." ${meaning.type === 'pron.' ? 'selected' : ''}>代词</option>
+                    </select>
+                    <button class="delete-meaning-btn" onclick="deleteMeaning(this)">×</button>
+                `;
+                container.appendChild(meaningItem);
+            });
 
             popup.classList.add('active');
             document.getElementById('contextMenu').classList.remove('active');
+        }
+
+        // 添加删除单个意思的函数
+        function deleteMeaning(button) {
+            const meaningItem = button.parentElement;
+            if (document.querySelectorAll('.meaning-item').length > 1) {
+                meaningItem.remove();
+            } else {
+                alert('单词至少需要保留一个意思！');
+            }
         }
 
         // 添加点击事件监听器到document
