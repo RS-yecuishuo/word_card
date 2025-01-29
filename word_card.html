@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小刚的单词书</title>
+    <title>你的单词卡片</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -24,6 +24,15 @@
             margin-bottom: 40px;
             font-size: 2.5em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            cursor: text;  /* 当鼠标悬停时显示文本光标 */
+            user-select: text;  /* 允许选择文本 */
+        }
+        h1.editing {
+            border-bottom: 2px solid #4CAF50;
+            outline: none;
+            padding: 0 5px;
+            margin-left: -5px;
+            margin-right: -5px;
         }
         .cards-container {
             display: grid;
@@ -534,55 +543,91 @@
             text-align: center;
         }
 
-        /* 添加颜色设置样式 */
+        /* 修改颜色设置样式 */
         .color-settings {
             margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
         }
 
         .color-settings h4 {
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
             color: #333;
+            font-size: 14px;
         }
 
         .color-input-group {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             gap: 10px;
         }
 
         .color-input-group label {
-            width: 60px;
             color: #666;
+            white-space: nowrap;
+            flex: 0 0 60px;
+            font-size: 14px;
         }
 
-        .color-input-group input {
-            flex: 1;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: monospace;
+        .color-input-group input[type="color"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 35px;
+            height: 35px;
+            padding: 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .color-input-group input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-input-group input[type="color"]::-webkit-color-swatch {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .color-input-group input[type="color"]::-moz-color-swatch {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .color-input-group input[type="color"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
         }
 
         .color-settings button {
             width: 100%;
-            margin-top: 10px;
-            background-color: #2196F3;
+            padding: 6px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 5px;
+            font-size: 13px;
         }
 
         .color-settings button:hover {
-            background-color: #1976D2;
+            background-color: #45a049;
+            transform: translateY(-1px);
         }
 
         /* 添加拼写模式相关样式 */
         .spell-mode {
-            background-color: #2196F3 !important;
+            background-color: #1e81d2 !important;
         }
 
         .spell-mode:hover {
-            background-color: #1976D2 !important;
+            background-color: #145597 !important;
         }
 
         /* 修改拼写模式输入框样式 */
@@ -642,11 +687,11 @@
 
         /* 添加拼写模式按钮的激活状态样式 */
         .spell-mode.active {
-            background-color: #f44336 !important;  /* 使用红色表示激活状态 */
+            background-color: #a8322a !important;  /* 使用红色表示激活状态 */
         }
 
         .spell-mode.active:hover {
-            background-color: #d32f2f !important;
+            background-color: #9f2727 !important;
         }
 
         /* 修改错误状态的样式 */
@@ -673,11 +718,11 @@
 
         /* 添加导入导出按钮样式 */
         .export, .import {
-            background-color: #2196F3 !important;
+            background-color: #000000 !important;
         }
 
         .export:hover, .import:hover {
-            background-color: #1976D2 !important;
+            background-color: #2a2a2a !important;
         }
 
         .context-menu-item.edit {
@@ -703,11 +748,59 @@
             align-items: center;
             margin-bottom: 10px;
         }
+
+        /* 添加颜色按钮组样式 */
+        .color-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .color-buttons button {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .color-buttons .reset-btn {
+            background-color: #9e9e9e;
+            color: white;
+        }
+
+        .color-buttons .reset-btn:hover {
+            background-color: #757575;
+            transform: translateY(-1px);
+        }
+
+        /* 修改颜色设置样式 */
+        .color-settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .color-section {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .color-section h5 {
+            margin: 0 0 8px 0;
+            color: #666;
+            font-size: 13px;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>小刚的单词书</h1>
+        <h1>请给你的单词书起个名字吧</h1>
         <div class="cards-container" id="cards-container"></div>
     </div>
 
@@ -742,18 +835,37 @@
             <button class="reset" onclick="resetToDefault()">删除所有</button>
         </div>
         
-        <!-- 添加背景颜色设置部分 -->
+        <!-- 修改背景颜色设置部分 -->
         <div class="color-settings">
-            <h4>背景颜色设置</h4>
-            <div class="color-input-group">
-                <label>颜色1：</label>
-                <input type="text" id="color1" placeholder="[R,G,B]" value="[245,247,250]">
+            <h4>颜色设置</h4>
+            <div class="color-settings-grid">
+                <div class="color-section">
+                    <h5>背景渐变</h5>
+                    <div class="color-input-group">
+                        <label>背景1：</label>
+                        <input type="color" id="color1" value="#f5f7fa">
+                    </div>
+                    <div class="color-input-group">
+                        <label>背景2：</label>
+                        <input type="color" id="color2" value="#c3cfe2">
+                    </div>
+                </div>
+                <div class="color-section">
+                    <h5>卡片颜色</h5>
+                    <div class="color-input-group">
+                        <label>卡片正面：</label>
+                        <input type="color" id="cardFrontColor" value="#ffffff">
+                    </div>
+                    <div class="color-input-group">
+                        <label>卡片背面：</label>
+                        <input type="color" id="cardBackColor" value="#4CAF50">
+                    </div>
+                </div>
             </div>
-            <div class="color-input-group">
-                <label>颜色2：</label>
-                <input type="text" id="color2" placeholder="[R,G,B]" value="[195,207,226]">
+            <div class="color-buttons">
+                <button onclick="applyColors()">应用颜色</button>
+                <button onclick="resetColors()" class="reset-btn">重置颜色</button>
             </div>
-            <button onclick="applyBackgroundColor()">应用背景色</button>
         </div>
     </div>
 
@@ -804,45 +916,40 @@
 
         // 预设单词列表
         let defaultWords = [
-            // 多词性单词
-            { english: "light", chinese: "光，光线", type: "n." },
-            { english: "light", chinese: "照亮，点亮", type: "v." },
-            { english: "light", chinese: "轻的，浅色的", type: "adj." },
-            
-            { english: "round", chinese: "圆，周期", type: "n." },
-            { english: "round", chinese: "环绕，转动", type: "v." },
-            { english: "round", chinese: "圆的，圆形的", type: "adj." },
-            
-            { english: "sound", chinese: "声音，响声", type: "n." },
-            { english: "sound", chinese: "发出声音", type: "v." },
-            { english: "sound", chinese: "健全的，合理的", type: "adj." },
-            
-            { english: "work", chinese: "工作，作品", type: "n." },
-            { english: "work", chinese: "工作，运转", type: "v." },
-            
-            { english: "present", chinese: "礼物，现在", type: "n." },
-            { english: "present", chinese: "呈现，提出", type: "v." },
-            { english: "present", chinese: "当前的，出席的", type: "adj." },
-            
-            // 常用单词
-            { english: "appreciate", chinese: "欣赏，感激", type: "v." },
-            { english: "brilliant", chinese: "杰出的，灿烂的", type: "adj." },
-            { english: "confidence", chinese: "信心，信任", type: "n." },
-            { english: "determine", chinese: "决定，确定", type: "v." },
-            { english: "enthusiasm", chinese: "热情，热忱", type: "n." },
-            
-            // 多意思单词
-            { english: "bank", chinese: "银行，金融机构", type: "n." },
-            { english: "bank", chinese: "河岸，堤岸", type: "n." },
-            
-            { english: "fair", chinese: "集市，展览会", type: "n." },
-            { english: "fair", chinese: "公平的，合理的", type: "adj." },
-            { english: "fair", chinese: "金发的，白皙的", type: "adj." },
-            
-            { english: "spring", chinese: "春天，春季", type: "n." },
-            { english: "spring", chinese: "弹簧，泉水", type: "n." },
-            { english: "spring", chinese: "跳跃，弹起", type: "v." }
+            { english: "breeze", chinese: "微风", type: "n." },
+            { english: "sunshine", chinese: "阳光", type: "n." },
+            { english: "rainbow", chinese: "彩虹", type: "n." },
+            { english: "cloud", chinese: "云", type: "n." },
+            { english: "rain", chinese: "雨", type: "n." },
+            { english: "rain", chinese: "下雨", type: "v." },
+            { english: "snow", chinese: "雪", type: "n." },
+            { english: "snow", chinese: "下雪", type: "v." },
+            { english: "wind", chinese: "风", type: "n." },
+            { english: "storm", chinese: "暴风雨", type: "n." },
+            { english: "thunder", chinese: "雷", type: "n." },
+            { english: "thunder", chinese: "打雷", type: "v." },
+            { english: "lightning", chinese: "闪电", type: "n." },
+            { english: "frost", chinese: "霜", type: "n." },
+            { english: "fog", chinese: "雾", type: "n." },
+            { english: "mist", chinese: "薄雾", type: "n." },
+            { english: "drizzle", chinese: "毛毛雨", type: "n." },
+            { english: "drizzle", chinese: "下毛毛雨", type: "v." },
+            { english: "shower", chinese: "阵雨", type: "n." },
+            { english: "hail", chinese: "冰雹", type: "n." },
+            { english: "hail", chinese: "下冰雹", type: "v." },
+            { english: "sunrise", chinese: "日出", type: "n." },
+            { english: "sunset", chinese: "日落", type: "n." },
+            { english: "dawn", chinese: "黎明", type: "n." },
+            { english: "dusk", chinese: "黄昏", type: "n." }
         ];
+
+        // 添加默认颜色常量
+        const DEFAULT_COLORS = {
+            color1: '#f5f7fa',
+            color2: '#c3cfe2',
+            cardFrontColor: '#ffffff',
+            cardBackColor: '#4CAF50'
+        };
 
         // 修改从localStorage加载单词的函数
         function loadWords() {
@@ -909,44 +1016,31 @@
         function resetToDefault() {
             if (confirm('确定要重置到默认单词列表吗？这将删除所有添加的单词！')) {
                 defaultWords = [
-                    // 多词性单词
-                    { english: "light", chinese: "光，光线", type: "n." },
-                    { english: "light", chinese: "照亮，点亮", type: "v." },
-                    { english: "light", chinese: "轻的，浅色的", type: "adj." },
-                    
-                    { english: "round", chinese: "圆，周期", type: "n." },
-                    { english: "round", chinese: "环绕，转动", type: "v." },
-                    { english: "round", chinese: "圆的，圆形的", type: "adj." },
-                    
-                    { english: "sound", chinese: "声音，响声", type: "n." },
-                    { english: "sound", chinese: "发出声音", type: "v." },
-                    { english: "sound", chinese: "健全的，合理的", type: "adj." },
-                    
-                    { english: "work", chinese: "工作，作品", type: "n." },
-                    { english: "work", chinese: "工作，运转", type: "v." },
-                    
-                    { english: "present", chinese: "礼物，现在", type: "n." },
-                    { english: "present", chinese: "呈现，提出", type: "v." },
-                    { english: "present", chinese: "当前的，出席的", type: "adj." },
-                    
-                    // 常用单词
-                    { english: "appreciate", chinese: "欣赏，感激", type: "v." },
-                    { english: "brilliant", chinese: "杰出的，灿烂的", type: "adj." },
-                    { english: "confidence", chinese: "信心，信任", type: "n." },
-                    { english: "determine", chinese: "决定，确定", type: "v." },
-                    { english: "enthusiasm", chinese: "热情，热忱", type: "n." },
-                    
-                    // 多意思单词
-                    { english: "bank", chinese: "银行，金融机构", type: "n." },
-                    { english: "bank", chinese: "河岸，堤岸", type: "n." },
-                    
-                    { english: "fair", chinese: "集市，展览会", type: "n." },
-                    { english: "fair", chinese: "公平的，合理的", type: "adj." },
-                    { english: "fair", chinese: "金发的，白皙的", type: "adj." },
-                    
-                    { english: "spring", chinese: "春天，春季", type: "n." },
-                    { english: "spring", chinese: "弹簧，泉水", type: "n." },
-                    { english: "spring", chinese: "跳跃，弹起", type: "v." }
+                    { english: "breeze", chinese: "微风", type: "n." },
+                    { english: "sunshine", chinese: "阳光", type: "n." },
+                    { english: "rainbow", chinese: "彩虹", type: "n." },
+                    { english: "cloud", chinese: "云", type: "n." },
+                    { english: "rain", chinese: "雨", type: "n." },
+                    { english: "rain", chinese: "下雨", type: "v." },
+                    { english: "snow", chinese: "雪", type: "n." },
+                    { english: "snow", chinese: "下雪", type: "v." },
+                    { english: "wind", chinese: "风", type: "n." },
+                    { english: "storm", chinese: "暴风雨", type: "n." },
+                    { english: "thunder", chinese: "雷", type: "n." },
+                    { english: "thunder", chinese: "打雷", type: "v." },
+                    { english: "lightning", chinese: "闪电", type: "n." },
+                    { english: "frost", chinese: "霜", type: "n." },
+                    { english: "fog", chinese: "雾", type: "n." },
+                    { english: "mist", chinese: "薄雾", type: "n." },
+                    { english: "drizzle", chinese: "毛毛雨", type: "n." },
+                    { english: "drizzle", chinese: "下毛毛雨", type: "v." },
+                    { english: "shower", chinese: "阵雨", type: "n." },
+                    { english: "hail", chinese: "冰雹", type: "n." },
+                    { english: "hail", chinese: "下冰雹", type: "v." },
+                    { english: "sunrise", chinese: "日出", type: "n." },
+                    { english: "sunset", chinese: "日落", type: "n." },
+                    { english: "dawn", chinese: "黎明", type: "n." },
+                    { english: "dusk", chinese: "黄昏", type: "n." }
                 ];
                 // 保存到localStorage
                 localStorage.setItem('defaultWords', JSON.stringify(defaultWords));
@@ -1290,67 +1384,86 @@
             }
         }
 
-        // 添加背景颜色相关函数
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? [
-                parseInt(result[1], 16),
-                parseInt(result[2], 16),
-                parseInt(result[3], 16)
-            ] : null;
-        }
-
-        function rgbToHex(r, g, b) {
-            return '#' + [r, g, b].map(x => {
-                const hex = x.toString(16);
-                return hex.length === 1 ? '0' + hex : hex;
-            }).join('');
-        }
-
-        function parseRgbInput(input) {
-            try {
-                const values = input.match(/\d+/g).map(Number);
-                if (values.length === 3 && values.every(v => v >= 0 && v <= 255)) {
-                    return values;
+        // 修改颜色应用函数
+        function applyColors() {
+            const color1 = document.getElementById('color1').value;
+            const color2 = document.getElementById('color2').value;
+            const cardFrontColor = document.getElementById('cardFrontColor').value;
+            const cardBackColor = document.getElementById('cardBackColor').value;
+            
+            document.body.style.background = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+            
+            // 应用卡片颜色
+            const style = document.createElement('style');
+            style.textContent = `
+                .card-front {
+                    background-color: ${cardFrontColor} !important;
                 }
-            } catch (e) {}
-            return null;
-        }
-
-        function applyBackgroundColor() {
-            const color1Input = document.getElementById('color1').value;
-            const color2Input = document.getElementById('color2').value;
-            
-            const rgb1 = parseRgbInput(color1Input);
-            const rgb2 = parseRgbInput(color2Input);
-            
-            if (!rgb1 || !rgb2) {
-                alert('请输入有效的RGB颜色值，格式为[R,G,B]');
-                return;
-            }
-            
-            const hex1 = rgbToHex(...rgb1);
-            const hex2 = rgbToHex(...rgb2);
-            
-            document.body.style.background = `linear-gradient(135deg, ${hex1} 0%, ${hex2} 100%)`;
+                .card-back {
+                    background-color: ${cardBackColor} !important;
+                }
+            `;
+            document.head.appendChild(style);
             
             // 保存颜色设置到localStorage
             localStorage.setItem('backgroundColor', JSON.stringify({
-                color1: rgb1,
-                color2: rgb2
+                color1: color1,
+                color2: color2,
+                cardFrontColor: cardFrontColor,
+                cardBackColor: cardBackColor
             }));
         }
 
-        // 在页面加载时恢复保存的背景颜色
+        // 添加重置颜色函数
+        function resetColors() {
+            // 重置颜色选择器的值
+            document.getElementById('color1').value = DEFAULT_COLORS.color1;
+            document.getElementById('color2').value = DEFAULT_COLORS.color2;
+            document.getElementById('cardFrontColor').value = DEFAULT_COLORS.cardFrontColor;
+            document.getElementById('cardBackColor').value = DEFAULT_COLORS.cardBackColor;
+            
+            // 应用默认颜色
+            document.body.style.background = `linear-gradient(135deg, ${DEFAULT_COLORS.color1} 0%, ${DEFAULT_COLORS.color2} 100%)`;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                .card-front {
+                    background-color: ${DEFAULT_COLORS.cardFrontColor} !important;
+                }
+                .card-back {
+                    background-color: ${DEFAULT_COLORS.cardBackColor} !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // 保存默认颜色到localStorage
+            localStorage.setItem('backgroundColor', JSON.stringify(DEFAULT_COLORS));
+        }
+
+        // 修改页面加载事件中的颜色恢复部分
         document.addEventListener('DOMContentLoaded', () => {
             const savedColors = localStorage.getItem('backgroundColor');
             if (savedColors) {
-                const { color1, color2 } = JSON.parse(savedColors);
-                document.getElementById('color1').value = `[${color1.join(',')}]`;
-                document.getElementById('color2').value = `[${color2.join(',')}]`;
-                const hex1 = rgbToHex(...color1);
-                const hex2 = rgbToHex(...color2);
-                document.body.style.background = `linear-gradient(135deg, ${hex1} 0%, ${hex2} 100%)`;
+                const { color1, color2, cardFrontColor, cardBackColor } = JSON.parse(savedColors);
+                document.getElementById('color1').value = color1;
+                document.getElementById('color2').value = color2;
+                document.getElementById('cardFrontColor').value = cardFrontColor || DEFAULT_COLORS.cardFrontColor;
+                document.getElementById('cardBackColor').value = cardBackColor || DEFAULT_COLORS.cardBackColor;
+                document.body.style.background = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+                
+                // 应用保存的卡片颜色
+                if (cardFrontColor || cardBackColor) {
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        .card-front {
+                            background-color: ${cardFrontColor || DEFAULT_COLORS.cardFrontColor} !important;
+                        }
+                        .card-back {
+                            background-color: ${cardBackColor || DEFAULT_COLORS.cardBackColor} !important;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
             }
             addPaginationControls();
             loadWords();
