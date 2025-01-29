@@ -8,5 +8,6 @@
  4.利用Chat GPT解释单词  
  5.个性化  
  ## 界面
- ![Uploading image.png…]()
+![屏幕截图 2025-01-29 210348](https://github.com/user-attachments/assets/d3c4f233-27a6-4036-9266-a6fa8cace7d8)
+
 
