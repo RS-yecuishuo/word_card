@@ -306,7 +306,7 @@
 
         .meaning-item {
             display: flex;
-            gap: 10px;
+            align-items: center;
             margin-bottom: 10px;
         }
 
@@ -795,6 +795,13 @@
     <input type="file" id="fileInput" style="display: none" accept=".txt" onchange="handleFileSelect(event)">
 
     <script>
+        // 添加分页相关变量
+        let pagination = {
+            currentPage: 1,
+            pageSize: 40,  // 每页显示20个单词
+            totalPages: 1
+        };
+
         // 预设单词列表
         let defaultWords = [
             // 多词性单词
@@ -874,15 +881,28 @@
             return Object.values(combined);
         }
 
-        // 修改显示函数
-        function displayWords() {
+        // 修改显示函数，实现分页
+        function displayWords(page = 1) {
             const container = document.getElementById('cards-container');
             container.innerHTML = '';
+            
             const combinedWords = combineWords(defaultWords);
-            combinedWords.forEach(word => {
+            pagination.totalPages = Math.ceil(combinedWords.length / pagination.pageSize);
+            pagination.currentPage = Math.min(Math.max(1, page), pagination.totalPages);
+            
+            // 计算当前页的单词
+            const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
+            const endIndex = Math.min(startIndex + pagination.pageSize, combinedWords.length);
+            const currentPageWords = combinedWords.slice(startIndex, endIndex);
+            
+            // 显示当前页的单词
+            currentPageWords.forEach(word => {
                 const card = createCard(word);
                 container.appendChild(card);
             });
+            
+            // 更新分页控件
+            updatePagination();
         }
 
         // 重置函数
@@ -1332,6 +1352,7 @@
                 const hex2 = rgbToHex(...color2);
                 document.body.style.background = `linear-gradient(135deg, ${hex1} 0%, ${hex2} 100%)`;
             }
+            addPaginationControls();
             loadWords();
         });
 
@@ -1540,38 +1561,172 @@
             URL.revokeObjectURL(a.href);
         }
 
-        // 导入单词函数
+        // 修改导入单词函数
         function importWords() {
-            document.getElementById('fileInput').click();
+            const fileInput = document.getElementById('fileInput');
+            fileInput.value = ''; // 重置文件输入，确保能重复选择同一文件
+            fileInput.click();
         }
 
-        // 处理文件选择
+        // 修改处理文件选择函数
         function handleFileSelect(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
                     const content = e.target.result;
-                    const words = content.split('\n').filter(line => line.trim());
+                    const lines = content.split('\n').filter(line => line.trim());
                     
-                    // 解析文件内容
-                    const newWords = words.map(line => {
-                        const [english, chinese, type] = line.split(':');
-                        return { english: english.trim(), chinese: chinese.trim(), type: type.trim() };
+                    // 验证文件格式，跳过错误行
+                    const newWords = [];
+                    const errorLines = [];
+                    
+                    lines.forEach((line, index) => {
+                        try {
+                            const parts = line.split(':');
+                            if (parts.length !== 3) {
+                                errorLines.push(`第 ${index + 1} 行格式错误：${line}`);
+                                return;
+                            }
+                            
+                            const [english, chinese, type] = parts;
+                            if (!english.trim() || !chinese.trim() || !type.trim()) {
+                                errorLines.push(`第 ${index + 1} 行存在空值：${line}`);
+                                return;
+                            }
+                            
+                            newWords.push({
+                                english: english.trim(),
+                                chinese: chinese.trim(),
+                                type: type.trim()
+                            });
+                        } catch (lineError) {
+                            errorLines.push(`第 ${index + 1} 行解析失败：${line}`);
+                        }
                     });
 
+                    if (newWords.length === 0) {
+                        throw new Error('没有找到有效的单词数据');
+                    }
+
+                    // 显示导入结果
+                    let message = `成功解析 ${newWords.length} 个单词`;
+                    if (errorLines.length > 0) {
+                        message += `\n\n以下 ${errorLines.length} 行存在错误（已跳过）：\n${errorLines.join('\n')}`;
+                    }
+
                     // 确认导入
-                    if (confirm(`确定要导入 ${newWords.length} 个单词吗？这将替换当前的单词列表。`)) {
+                    if (confirm(message + '\n\n是否确定导入？这将替换当前的单词列表。')) {
                         defaultWords = newWords;
                         localStorage.setItem('defaultWords', JSON.stringify(defaultWords));
                         displayWords();
                         alert('导入成功！');
+                        togglePopup();
                     }
-                };
-                reader.readAsText(file);
-            }
-            // 重置文件输入框，允许重复选择同一个文件
-            event.target.value = '';
+                } catch (error) {
+                    alert('导入失败：' + error.message);
+                }
+            };
+
+            reader.onerror = function() {
+                alert('读取文件时发生错误！');
+            };
+
+            reader.readAsText(file);
+        }
+
+        // 添加分页控件
+        function addPaginationControls() {
+            const paginationHtml = `
+                <div class="pagination">
+                    <button class="page-btn first-page" onclick="displayWords(1)">首页</button>
+                    <button class="page-btn prev-page" onclick="displayWords(pagination.currentPage - 1)">上一页</button>
+                    <span class="page-info">第 <span id="currentPage">1</span>/<span id="totalPages">1</span> 页</span>
+                    <button class="page-btn next-page" onclick="displayWords(pagination.currentPage + 1)">下一页</button>
+                    <button class="page-btn last-page" onclick="displayWords(pagination.totalPages)">末页</button>
+                    <select id="pageSizeSelect" onchange="changePageSize(this.value)">
+                        <option value="10">10条/页</option>
+                        <option value="20" selected>20条/页</option>
+                        <option value="50">50条/页</option>
+                        <option value="100">100条/页</option>
+                    </select>
+                </div>
+            `;
+            
+            // 添加分页控件到容器后面
+            const container = document.getElementById('cards-container');
+            container.insertAdjacentHTML('afterend', paginationHtml);
+            
+            // 添加分页样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .pagination {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin: 20px 0;
+                    gap: 10px;
+                }
+                
+                .page-btn {
+                    padding: 8px 15px;
+                    border: none;
+                    border-radius: 4px;
+                    background-color: #4CAF50;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                
+                .page-btn:hover {
+                    background-color: #45a049;
+                    transform: translateY(-1px);
+                }
+                
+                .page-btn:disabled {
+                    background-color: #cccccc;
+                    cursor: not-allowed;
+                    transform: none;
+                }
+                
+                .page-info {
+                    margin: 0 10px;
+                    color: #666;
+                }
+                
+                #pageSizeSelect {
+                    padding: 5px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 更新分页控件状态
+        function updatePagination() {
+            document.getElementById('currentPage').textContent = pagination.currentPage;
+            document.getElementById('totalPages').textContent = pagination.totalPages;
+            
+            // 更新按钮状态
+            const prevBtn = document.querySelector('.prev-page');
+            const nextBtn = document.querySelector('.next-page');
+            const firstBtn = document.querySelector('.first-page');
+            const lastBtn = document.querySelector('.last-page');
+            
+            prevBtn.disabled = pagination.currentPage === 1;
+            nextBtn.disabled = pagination.currentPage === pagination.totalPages;
+            firstBtn.disabled = pagination.currentPage === 1;
+            lastBtn.disabled = pagination.currentPage === pagination.totalPages;
+        }
+
+        // 修改每页显示数量
+        function changePageSize(size) {
+            pagination.pageSize = parseInt(size);
+            displayWords(1);  // 切换到第一页
         }
     </script>
 </body>
